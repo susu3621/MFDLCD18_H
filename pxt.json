@@ -1,6 +1,6 @@
 {
     "name": "mfdlcd18-h",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "MakeCode blocks for the Waveshare-compatible 1.8-inch 160x128 LCD on micro:bit V2",
     "license": "MIT",
     "dependencies": {
