@@ -14,15 +14,6 @@ const GUI_BACKGROUND_COLOR = 0xFFFF
 const LCD_WIDTH = 160
 const LCD_HEIGHT = 128
 
-// SRAM opcodes
-const SRAM_CMD_WRSR = 0x01
-const SRAM_CMD_READ = 0x03
-const SRAM_CMD_WRITE = 0x02
-
-// SRAM modes
-const SRAM_BYTE_MODE = 0x00
-const SRAM_STREAM_MODE = 0x40
-
 /** Standard RGB565 colors for the LCD. */
 enum LCD_COLOR {
     //% block="white"
@@ -1417,13 +1408,13 @@ const Font12_Table: number[] =
 
 /**
  * Blocks for the Waveshare 1.8-inch 160x128 LCD and compatible boards.
- * Drawing operations update the onboard SRAM; call show to refresh the LCD.
+ * Drawing operations are written directly to the LCD.
  */
 //% block="1.8in LCD"
 //% weight=20 color=#436EEE icon="\uf108"
 //% groups='["Setup", "Screen", "Draw", "Text", "Colors", "Advanced"]'
 namespace LCD1IN8 {
-    /** Initialize the LCD, SPI bus, backlight and onboard SRAM. */
+    /** Initialize the LCD, SPI bus and backlight. */
     //% blockId=LCD_Init
     //% blockGap=8
     //% block="initialize 1.8in LCD"
@@ -1432,7 +1423,9 @@ namespace LCD1IN8 {
     export function LCD_Init(): void {
         pins.spiPins(DigitalPin.P15, DigitalPin.P14, DigitalPin.P13)
         pins.spiFormat(8, 0)
-        pins.spiFrequency(18000000)
+        // The original board uses a GC9106 controller and is specified for a
+        // 1 MHz SPI clock. Keep both chip selects inactive while configuring it.
+        pins.spiFrequency(1000000)
         pins.digitalWritePin(DigitalPin.P16, 1)
         pins.digitalWritePin(DigitalPin.P2, 1)
         pins.digitalWritePin(DigitalPin.P12, 1)
@@ -1445,109 +1438,41 @@ namespace LCD1IN8 {
         pins.digitalWritePin(DigitalPin.P8, 1);
         basic.pause(100);
 
-        //ST7735R Frame Rate
-        LCD_WriteReg(0xB1);
-        LCD_WriteData_8Bit(0x01);
-        LCD_WriteData_8Bit(0x2C);
-        LCD_WriteData_8Bit(0x2D);
+        // GC9106 initialization, verified against the physical module.
+        LCD_WriteReg(0xFE)
+        LCD_WriteReg(0xFE)
+        LCD_WriteReg(0xEF)
+        LCD_WriteReg(0xB3)
+        LCD_WriteData_8Bit(0x03)
+        LCD_WriteReg(0xB6)
+        LCD_WriteData_8Bit(0x01)
+        LCD_WriteReg(0xA3)
+        LCD_WriteData_8Bit(0x11)
+        LCD_WriteReg(0x21)
+        LCD_WriteReg(0x36)
+        LCD_WriteData_8Bit(0x67)
+        LCD_WriteReg(0x3A)
+        LCD_WriteData_8Bit(0x05)
+        LCD_WriteReg(0xB4)
+        LCD_WriteData_8Bit(0x21)
 
-        LCD_WriteReg(0xB2);
-        LCD_WriteData_8Bit(0x01);
-        LCD_WriteData_8Bit(0x2C);
-        LCD_WriteData_8Bit(0x2D);
+        LCD_WriteReg(0xF0)
+        const gammaPositive = [0x31, 0x26, 0x28, 0x00, 0x2C, 0x0C, 0x0C, 0x15, 0x15, 0x0F]
+        for (let value of gammaPositive) LCD_WriteData_8Bit(value)
 
-        LCD_WriteReg(0xB3);
-        LCD_WriteData_8Bit(0x01);
-        LCD_WriteData_8Bit(0x2C);
-        LCD_WriteData_8Bit(0x2D);
-        LCD_WriteData_8Bit(0x01);
-        LCD_WriteData_8Bit(0x2C);
-        LCD_WriteData_8Bit(0x2D);
+        LCD_WriteReg(0xF1)
+        const gammaNegative = [0x0E, 0x12, 0x13, 0x00, 0x0A, 0x0D, 0x0D, 0x14, 0x13, 0x0F]
+        for (let value of gammaNegative) LCD_WriteData_8Bit(value)
 
-        LCD_WriteReg(0xB4); //Column inversion
-        LCD_WriteData_8Bit(0x07);
-
-        //ST7735R Power Sequence
-        LCD_WriteReg(0xC0);
-        LCD_WriteData_8Bit(0xA2);
-        LCD_WriteData_8Bit(0x02);
-        LCD_WriteData_8Bit(0x84);
-        LCD_WriteReg(0xC1);
-        LCD_WriteData_8Bit(0xC5);
-
-        LCD_WriteReg(0xC2);
-        LCD_WriteData_8Bit(0x0A);
-        LCD_WriteData_8Bit(0x00);
-
-        LCD_WriteReg(0xC3);
-        LCD_WriteData_8Bit(0x8A);
-        LCD_WriteData_8Bit(0x2A);
-        LCD_WriteReg(0xC4);
-        LCD_WriteData_8Bit(0x8A);
-        LCD_WriteData_8Bit(0xEE);
-
-        LCD_WriteReg(0xC5); //VCOM
-        LCD_WriteData_8Bit(0x0E);
-
-        //ST7735R Gamma Sequence
-        LCD_WriteReg(0xe0);
-        LCD_WriteData_8Bit(0x0f);
-        LCD_WriteData_8Bit(0x1a);
-        LCD_WriteData_8Bit(0x0f);
-        LCD_WriteData_8Bit(0x18);
-        LCD_WriteData_8Bit(0x2f);
-        LCD_WriteData_8Bit(0x28);
-        LCD_WriteData_8Bit(0x20);
-        LCD_WriteData_8Bit(0x22);
-        LCD_WriteData_8Bit(0x1f);
-        LCD_WriteData_8Bit(0x1b);
-        LCD_WriteData_8Bit(0x23);
-        LCD_WriteData_8Bit(0x37);
-        LCD_WriteData_8Bit(0x00);
-        LCD_WriteData_8Bit(0x07);
-        LCD_WriteData_8Bit(0x02);
-        LCD_WriteData_8Bit(0x10);
-
-        LCD_WriteReg(0xe1);
-        LCD_WriteData_8Bit(0x0f);
-        LCD_WriteData_8Bit(0x1b);
-        LCD_WriteData_8Bit(0x0f);
-        LCD_WriteData_8Bit(0x17);
-        LCD_WriteData_8Bit(0x33);
-        LCD_WriteData_8Bit(0x2c);
-        LCD_WriteData_8Bit(0x29);
-        LCD_WriteData_8Bit(0x2e);
-        LCD_WriteData_8Bit(0x30);
-        LCD_WriteData_8Bit(0x30);
-        LCD_WriteData_8Bit(0x39);
-        LCD_WriteData_8Bit(0x3f);
-        LCD_WriteData_8Bit(0x00);
-        LCD_WriteData_8Bit(0x07);
-        LCD_WriteData_8Bit(0x03);
-        LCD_WriteData_8Bit(0x10);
-
-        LCD_WriteReg(0xF0); //Enable test command
-        LCD_WriteData_8Bit(0x01);
-
-        LCD_WriteReg(0xF6); //Disable ram power save mode
-        LCD_WriteData_8Bit(0x00);
-
-        LCD_WriteReg(0x3A); //65k mode
-        LCD_WriteData_8Bit(0x05);
-
-        LCD_WriteReg(0x36); //MX, MY, RGB mode
-        LCD_WriteData_8Bit(0xF7 & 0xA0); //RGB color filter panel
-
-        //sleep out
-        LCD_WriteReg(0x11);
+        LCD_WriteReg(0xFE)
+        LCD_WriteReg(0xFF)
+        LCD_WriteReg(0x11)
         basic.pause(120);
-
         LCD_WriteReg(0x29);
         basic.pause(20);
-        SPIRAM_Set_Mode(SRAM_BYTE_MODE);
     }
 
-    /** Clear the visible LCD to white without changing the drawing cache. */
+    /** Clear the visible LCD to white. */
     //% blockId=LCD_Clear
     //% blockGap=8
     //% block="clear LCD to white"
@@ -1558,7 +1483,7 @@ namespace LCD1IN8 {
         LCD_SetColor(LCD_COLOR.WHITE, LCD_WIDTH * LCD_HEIGHT);
     }
 
-    /** Fill the visible LCD with a color without changing the drawing cache. */
+    /** Fill the visible LCD with a color. */
     //% blockId=LCD_Filling
     //% blockGap=8
     //% block="fill LCD color %Color=LCD1IN8_color"
@@ -1645,19 +1570,18 @@ namespace LCD1IN8 {
         Ystart = Math.max(0, Math.min(LCD_HEIGHT - 1, Ystart))
         Xend = Math.max(Xstart + 1, Math.min(LCD_WIDTH, Xend))
         Yend = Math.max(Ystart + 1, Math.min(LCD_HEIGHT, Yend))
-        //set the X coordinates
+        // Coordinates are half-open: start is inclusive and end is exclusive.
         LCD_WriteReg(0x2A);
-        LCD_WriteData_8Bit(0x00);
-        LCD_WriteData_8Bit((Xstart & 0xff) + 1);
-        LCD_WriteData_8Bit(0x00 );
-        LCD_WriteData_8Bit(((Xend - 1) & 0xff) + 1);
+        LCD_WriteData_8Bit((Xstart >> 8) & 0xff);
+        LCD_WriteData_8Bit(Xstart & 0xff);
+        LCD_WriteData_8Bit(((Xend - 1) >> 8) & 0xff);
+        LCD_WriteData_8Bit((Xend - 1) & 0xff);
 
-        //set the Y coordinates
         LCD_WriteReg(0x2B);
-        LCD_WriteData_8Bit(0x00);
-        LCD_WriteData_8Bit((Ystart & 0xff) + 2);
-        LCD_WriteData_8Bit(0x00 );
-        LCD_WriteData_8Bit(((Yend - 1) & 0xff)+ 2);
+        LCD_WriteData_8Bit((Ystart >> 8) & 0xff);
+        LCD_WriteData_8Bit(Ystart & 0xff);
+        LCD_WriteData_8Bit(((Yend - 1) >> 8) & 0xff);
+        LCD_WriteData_8Bit((Yend - 1) & 0xff);
 
         LCD_WriteReg(0x2C);
     }
@@ -1668,53 +1592,35 @@ namespace LCD1IN8 {
 
     function LCD_SetPoint(Xpoint: number, Ypoint: number, Color: number): void {
         if (Xpoint < 0 || Xpoint >= LCD_WIDTH || Ypoint < 0 || Ypoint >= LCD_HEIGHT) return
-        let Addr = (Xpoint + Ypoint * LCD_WIDTH) * 2;
-        SPIRAM_WR_Byte(Addr, Color >> 8);
-        SPIRAM_WR_Byte(Addr + 1, Color & 0xff);
+        LCD_SetWindows(Xpoint, Ypoint, Xpoint + 1, Ypoint + 1)
+        LCD_WriteData_8Bit((Color >> 8) & 0xff)
+        LCD_WriteData_8Bit(Color & 0xff)
     }
 
-    /** Clear the onboard drawing cache to white. */
+    /** Clear the drawing surface to white. */
     //% blockId=Draw_Clear
     //% blockGap=8
-    //% block="clear drawing cache"
+    //% block="clear drawing surface"
     //% group="Screen"
     //% weight=193
     export function LCD_ClearBuf(): void {
-        const chunk = pins.createBuffer(128)
-        chunk.fill(0xff)
-        SPIRAM_Set_Mode(SRAM_STREAM_MODE);
-        pins.digitalWritePin(DigitalPin.P2, 0);
-        pins.spiWrite(SRAM_CMD_WRITE);
-        pins.spiWrite(0);
-        pins.spiWrite(0);
-        pins.spiWrite(0);
-        for (let i = 0; i < LCD_WIDTH * LCD_HEIGHT * 2 / chunk.length; i++) {
-            pins.spiTransfer(chunk, null)
-        }
-        pins.digitalWritePin(DigitalPin.P2, 1);
+        LCD_Filling(LCD_COLOR.WHITE)
     }
 
-    /** Copy the complete drawing cache to the LCD. */
+    /** Finish direct drawing and ensure the LCD is enabled. */
     //% blockId=LCD_Display
     //% blockGap=8
-    //% block="show drawing cache on LCD"
+    //% block="finish drawing (compatibility)"
     //% group="Screen"
     //% weight=190
     export function LCD_Display(): void {
-        SPIRAM_Set_Mode(SRAM_STREAM_MODE);
-        LCD_SetWindows(0, 0, LCD_WIDTH, LCD_HEIGHT);
-        const rbuf = pins.createBuffer(LCD_WIDTH * 2 * 2)
-        for (let row = 0; row < LCD_HEIGHT; row += 2) {
-            SPIRAM_Read((row * LCD_WIDTH) * 2, rbuf)
-            LCD_WriteBuffer(rbuf)
-        }
-        LCD_WriteReg(0x29);
+        LCD_WriteReg(0x29)
     }
 
-    /** Copy an inclusive rectangular area of the drawing cache to the LCD. */
+    /** Compatibility operation for direct drawing; the area is already visible. */
     //% blockId=LCD_DisplayWindows
     //% blockGap=8
-    //% block="show cache area x1 %Xstart y1 %Ystart x2 %Xend y2 %Yend"
+    //% block="finish area x1 %Xstart y1 %Ystart x2 %Xend y2 %Yend (compatibility)"
     //% Xstart.min=1 Xstart.max=160 Xstart.defl=1
     //% Ystart.min=1 Ystart.max=128 Ystart.defl=1
     //% Xend.min=1 Xend.max=160 Xend.defl=80
@@ -1737,38 +1643,10 @@ namespace LCD1IN8 {
             Yend = temp
         }
 
-        const x0 = Xstart - 1
-        const y0 = Ystart - 1
-        const width = Xend - Xstart + 1
-        const height = Yend - Ystart + 1
-        const rowBuffer = pins.createBuffer(width * 2)
-        SPIRAM_Set_Mode(SRAM_STREAM_MODE)
-        LCD_SetWindows(x0, y0, x0 + width, y0 + height)
-        for (let row = 0; row < height; row++) {
-            SPIRAM_Read(((y0 + row) * LCD_WIDTH + x0) * 2, rowBuffer)
-            LCD_WriteBuffer(rowBuffer)
-        }
         LCD_WriteReg(0x29)
     }
 
-    function LCD_WriteBuffer(data: Buffer): void {
-        pins.digitalWritePin(DigitalPin.P12, 1)
-        pins.digitalWritePin(DigitalPin.P16, 0)
-        pins.spiTransfer(data, null)
-        pins.digitalWritePin(DigitalPin.P16, 1)
-    }
-
-    function SPIRAM_Read(address: number, data: Buffer): void {
-        pins.digitalWritePin(DigitalPin.P2, 0)
-        pins.spiWrite(SRAM_CMD_READ)
-        pins.spiWrite((address >> 16) & 0xff)
-        pins.spiWrite((address >> 8) & 0xff)
-        pins.spiWrite(address & 0xff)
-        pins.spiTransfer(null, data)
-        pins.digitalWritePin(DigitalPin.P2, 1)
-    }
-
-    /** Draw a pixel into the onboard cache using 1-based LCD coordinates. */
+    /** Draw a pixel using 1-based LCD coordinates. */
     //% blockId=DrawPoint
     //% blockGap=8
     //% block="draw pixel x %Xpoint y %Ypoint color %Color=LCD1IN8_color size %Dot_Pixel"
@@ -1785,7 +1663,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw a solid or dotted line into the onboard cache. */
+    /** Draw a solid or dotted line. */
     //% blockId=DrawLine
     //% blockGap=8
     //% block="draw line x1 %Xstart y1 %Ystart x2 %Xend y2 %Yend color %Color=LCD1IN8_color width %Line_width style %Line_Style"
@@ -1831,7 +1709,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw an outline or filled rectangle into the onboard cache. */
+    /** Draw an outline or filled rectangle. */
     //% blockId=DrawRectangle
     //% blockGap=8
     //% block="draw rectangle x1 %Xstart2 y1 %Ystart2 x2 %Xend2 y2 %Yend2 color %Color=LCD1IN8_color fill %Filled width %Dot_Pixel"
@@ -1867,7 +1745,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw an outline or filled circle into the onboard cache. */
+    /** Draw an outline or filled circle. */
     //% blockId=DrawCircle
     //% blockGap=8
     //% block="draw circle x %X_Center y %Y_Center radius %Radius color %Color=LCD1IN8_color fill %Draw_Fill width %Dot_Pixel"
@@ -1929,7 +1807,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw printable ASCII text into the onboard cache. */
+    /** Draw printable ASCII text. */
     //% blockId=DisString
     //% blockGap=8
     //% block="draw text x %Xchar y %Ychar text %ch color %Color=LCD1IN8_color"
@@ -1959,7 +1837,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw a number into the onboard cache. */
+    /** Draw a number. */
     //% blockId=DisNumber
     //% blockGap=8
     //% block="draw number x %Xnum y %Ynum number %num color %Color=LCD1IN8_color"
@@ -1990,21 +1868,4 @@ namespace LCD1IN8 {
         }// Write all
     }
 
-    //spi ram
-    function SPIRAM_Set_Mode(mode:number): void {
-        pins.digitalWritePin(DigitalPin.P2, 0);
-        pins.spiWrite(SRAM_CMD_WRSR);
-        pins.spiWrite(mode);
-        pins.digitalWritePin(DigitalPin.P2, 1);
-    }
-
-    function SPIRAM_WR_Byte(Addr: number, Data: number): void {
-        pins.digitalWritePin(DigitalPin.P2, 0);
-        pins.spiWrite(SRAM_CMD_WRITE);
-        pins.spiWrite((Addr >> 16) & 0xff);
-        pins.spiWrite((Addr >> 8) & 0xff);
-        pins.spiWrite(Addr & 0xff);
-        pins.spiWrite(Data & 0xff);
-        pins.digitalWritePin(DigitalPin.P2, 1);
-    }
 }
