@@ -36,5 +36,13 @@
     "LCD1IN8.DrawRectangle|block": "画矩形 左 %Xstart2 上 %Ystart2 右 %Xend2 下 %Yend2 颜色 %Color=LCD1IN8_color 填充 %Filled 宽度 %Dot_Pixel",
     "LCD1IN8.DrawCircle|block": "画圆 圆心x %X_Center 圆心y %Y_Center 半径 %Radius 颜色 %Color=LCD1IN8_color 填充 %Draw_Fill 宽度 %Dot_Pixel",
     "LCD1IN8.DisString|block": "画文字 x %Xchar y %Ychar 内容 %ch 颜色 %Color=LCD1IN8_color",
-    "LCD1IN8.DisNumber|block": "画数字 x %Xnum y %Ynum 数字 %num 颜色 %Color=LCD1IN8_color"
+    "LCD1IN8.DisString|param|ch|defl": "你好！",
+    "LCD1IN8.DisNumber|block": "画数字 x %Xnum y %Ynum 数字 %num 颜色 %Color=LCD1IN8_color",
+    "{id:category}LCD1IN8": "1.8英寸 LCD",
+    "{id:group}Setup": "设置",
+    "{id:group}Screen": "屏幕",
+    "{id:group}Draw": "绘图",
+    "{id:group}Text": "文字",
+    "{id:group}Colors": "颜色",
+    "{id:group}Advanced": "高级"
 }

@@ -9,7 +9,7 @@
     "files": [
         "README.md",
         "LCD1in8.ts",
-        "_locales/zh/LCD1in8-strings.json"
+        "_locales/zh/mfdlcd18-h-strings.json"
     ],
     "testFiles": [
         "test.ts"
