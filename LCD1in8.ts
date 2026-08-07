@@ -1807,7 +1807,7 @@ namespace LCD1IN8 {
         }
     }
 
-    /** Draw printable ASCII text. */
+    /** Draw printable ASCII text. Use DisUnicodeHex for Chinese text. */
     //% blockId=DisString
     //% blockGap=8
     //% block="draw text x %Xchar y %Ychar text %ch color %Color=LCD1IN8_color"
@@ -1819,21 +1819,74 @@ namespace LCD1IN8 {
     //% weight=100
     export function DisString(Xchar: number, Ychar: number, ch: string, Color: number): void {
         const fontHeight = 12
-        const fontWidth = 7
         const originX = Math.max(0, Math.min(LCD_WIDTH - 1, Xchar - 1))
         let Xpoint = originX
         let Ypoint = Math.max(0, Math.min(LCD_HEIGHT - 1, Ychar - 1))
         for (let i = 0; i < ch.length; i++) {
+            const charCode = ch.charCodeAt(i)
+            const cjkIndex = charCode >= 127 ? cjkGlyphIndex(charCode) : -1
+            const fontWidth = cjkIndex >= 0 ? 12 : 7
+
             if (Xpoint + fontWidth > LCD_WIDTH) {
                 Xpoint = originX
                 Ypoint += fontHeight
             }
             if (Ypoint + fontHeight > LCD_HEIGHT) break
 
-            let charCode = ch.charCodeAt(i)
-            if (charCode < 32 || charCode > 126) charCode = 63
-            DisChar_1207(Xpoint, Ypoint, (charCode - 32) * fontHeight, Color)
+            if (cjkIndex >= 0) {
+                DisChar_CJK12(Xpoint, Ypoint, cjkIndex, Color)
+            } else {
+                const asciiCode = charCode >= 32 && charCode <= 126 ? charCode : 63
+                DisChar_1207(Xpoint, Ypoint, (asciiCode - 32) * fontHeight, Color)
+            }
             Xpoint += fontWidth
+        }
+    }
+
+    /**
+     * Draw Unicode characters from hexadecimal code points separated by spaces or commas.
+     * For example, 4F60 597D displays 你好.
+     */
+    //% blockId=DisUnicodeHex
+    //% blockGap=8
+    //% block="draw Unicode text x %Xchar y %Ychar hex codes %codes color %Color=LCD1IN8_color"
+    //% Xchar.min=1 Xchar.max=160 Xchar.defl=1
+    //% Ychar.min=1 Ychar.max=128 Ychar.defl=1
+    //% codes.defl="4F60 597D"
+    //% Color.min=0 Color.max=65535
+    //% group="Text"
+    //% weight=95
+    export function DisUnicodeHex(Xchar: number, Ychar: number, codes: string, Color: number): void {
+        const originX = Math.max(0, Math.min(LCD_WIDTH - 1, Xchar - 1))
+        let Xpoint = originX
+        let Ypoint = Math.max(0, Math.min(LCD_HEIGHT - 1, Ychar - 1))
+        let codepoint = 0
+        let hasDigit = false
+
+        for (let i = 0; i <= codes.length; i++) {
+            const digit = i < codes.length ? HexDigit(codes.charCodeAt(i)) : -1
+            if (digit >= 0) {
+                codepoint = codepoint * 16 + digit
+                hasDigit = true
+            } else if (hasDigit) {
+                const cjkIndex = codepoint >= 127 ? cjkGlyphIndex(codepoint) : -1
+                const fontWidth = cjkIndex >= 0 ? 12 : 7
+                if (Xpoint + fontWidth > LCD_WIDTH) {
+                    Xpoint = originX
+                    Ypoint += 12
+                }
+                if (Ypoint + 12 > LCD_HEIGHT) break
+
+                if (cjkIndex >= 0) {
+                    DisChar_CJK12(Xpoint, Ypoint, cjkIndex, Color)
+                } else {
+                    const asciiCode = codepoint >= 32 && codepoint <= 126 ? codepoint : 63
+                    DisChar_1207(Xpoint, Ypoint, (asciiCode - 32) * 12, Color)
+                }
+                Xpoint += fontWidth
+                codepoint = 0
+                hasDigit = false
+            }
         }
     }
 
@@ -1866,6 +1919,35 @@ namespace LCD1IN8 {
             if(7 % 8 != 0)
                 off++;
         }// Write all
+    }
+
+    function DisChar_CJK12(Xchar: number, Ychar: number, glyphIndex: number, Color: number): void {
+        for (let row = 0; row < 12; row++) {
+            const high = cjkGlyphByte(glyphIndex, row * 2)
+            const low = cjkGlyphByte(glyphIndex, row * 2 + 1)
+            for (let column = 0; column < 12; column++) {
+                const pixelByte = column < 8 ? high : low
+                const pixelMask = 0x80 >> (column % 8)
+                if (pixelByte & pixelMask) LCD_SetPoint(Xchar + column, Ychar + row, Color)
+            }
+        }
+    }
+
+    function HexDigit(charCode: number): number {
+        if (charCode >= 48 && charCode <= 57) return charCode - 48
+        if (charCode >= 65 && charCode <= 70) return charCode - 55
+        if (charCode >= 97 && charCode <= 102) return charCode - 87
+        return -1
+    }
+
+    //% shim=LCD1IN8::cjkGlyphIndex
+    function cjkGlyphIndex(codepoint: number): number {
+        return -1
+    }
+
+    //% shim=LCD1IN8::cjkGlyphByte
+    function cjkGlyphByte(glyphIndex: number, byteOffset: number): number {
+        return 0
     }
 
 }

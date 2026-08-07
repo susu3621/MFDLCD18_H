@@ -29,7 +29,11 @@ LCD1IN8.DrawRectangle(
     DRAW_FILL.DRAW_EMPTY,
     DOT_PIXEL.DOT_PIXEL_2
 )
-LCD1IN8.DisString(20, 55, "micro:bit V2", LCD1IN8.Get_Color(LCD_COLOR.RED))
+LCD1IN8.DisUnicodeHex(
+    20, 55,
+    "4F60 597D FF0C 4E16 754C FF01",
+    LCD1IN8.Get_Color(LCD_COLOR.RED)
+)
 LCD1IN8.LCD_Display()
 ```
 
@@ -38,7 +42,7 @@ LCD1IN8.LCD_Display()
 - 初始化 LCD、调节 0–10 级背光。
 - 清屏、填充屏幕、清空绘图区域，以及兼容旧项目的刷新积木。
 - 绘制点、实线/虚线、空心/实心矩形和圆。
-- 显示可打印 ASCII 文本与数字。
+- 显示可打印 ASCII、GB2312 一级字库的 3,755 个常用简体汉字、常用中文标点与数字。
 - 使用预设 RGB565 颜色，或由 RGB 数值生成自定义 RGB565 颜色。
 
 “清屏”“填充屏幕”、点、线、图形及文字都会直接修改当前 LCD 画面。全屏和局部刷新积木为兼容旧项目而保留，不需要额外调用。
@@ -61,7 +65,6 @@ LCD1IN8.LCD_Display()
 安装 Node.js 后，在仓库目录执行：
 
 ```bash
-npx pxt target microbit v9.1.1
 npx pxt build
 ```
 
@@ -71,7 +74,17 @@ npx pxt build
 
 本版本将旧 mbed C++ 驱动迁移为 MakeCode TypeScript，以兼容 micro:bit V2 的 CODAL 运行时和当前 MakeCode 网页编辑器。保留了原项目的 `LCD1IN8` 命名空间、常用函数名和枚举名，已有 TypeScript 项目可以继续迁移使用。
 
-硬件初始化与引脚定义参考 Waveshare 的 micro:bit V2 驱动。字库支持 ASCII 字符 `32` 到 `126`；其他字符显示为问号。
+硬件初始化与引脚定义参考原始 micro:bit V2 驱动。英文字库支持 ASCII 字符 `32` 到 `126`；中文字库采用 12×12 Fusion Pixel Font，支持 GB2312 一级字库的 3,755 个常用简体汉字及常用中文标点，不在字库内的字符显示为问号。
+
+当前 MakeCode micro:bit 编译器会截断 TypeScript/Python 源代码中的非 ASCII 字符串，因此中文请使用 `DisUnicodeHex`（Python 中为 `dis_unicode_hex`），并传入以空格或逗号分隔的 Unicode 十六进制码点。例如 `你好，世界！` 对应 `4F60 597D FF0C 4E16 754C FF01`。英文和数字继续使用 `DisString`。
+
+可在仓库目录用以下命令转换任意中文文本：
+
+```bash
+python3 tools/encode_unicode.py "你好，世界！"
+```
+
+中文点阵字形来自 [Fusion Pixel Font](https://github.com/TakWolf/fusion-pixel-font)，依照 SIL Open Font License 1.1 使用；许可证见 `LICENSES/FusionPixelFont-OFL.txt`。
 
 ## License
 

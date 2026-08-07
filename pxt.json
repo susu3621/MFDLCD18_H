@@ -1,6 +1,6 @@
 {
     "name": "mfdlcd18-h",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "description": "MakeCode blocks for the Waveshare-compatible 1.8-inch 160x128 LCD on micro:bit V2",
     "license": "MIT",
     "dependencies": {
@@ -8,6 +8,8 @@
     },
     "files": [
         "README.md",
+        "LICENSES/FusionPixelFont-OFL.txt",
+        "font_cjk.cpp",
         "LCD1in8.ts",
         "_locales/zh-CN/mfdlcd18-h-strings.json"
     ],
@@ -15,6 +17,9 @@
         "test.ts"
     ],
     "public": true,
+    "disablesVariants": [
+        "mbdal"
+    ],
     "supportedTargets": [
         "microbit"
     ],
