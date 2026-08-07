@@ -1,10 +1,14 @@
-all: deploy
+PXT ?= npx pxt
+
+.PHONY: all build deploy test
+
+all: build
 
 build:
-	pxt build
+	$(PXT) build
 
 deploy:
-	pxt deploy
+	$(PXT) deploy
 
 test:
-	pxt test
+	$(PXT) test

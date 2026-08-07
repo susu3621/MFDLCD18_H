@@ -1,35 +1,16 @@
-// tests go here; this will not be compiled when this package is used as a library
+// Compiled only when this extension is opened directly.
+// It exercises every public block and remains convertible to MakeCode blocks.
 LCD1IN8.LCD_Init()
-//LCD1IN8.LCD_SetBL(10)
-LCD1IN8.LCD_Filling(LCD_COLOR.RED)
-
-LCD1IN8.DrawCircle(
-    80,
-    60,
-    20,
-    LCD1IN8.Get_Color(LCD_COLOR.BLUE),
-    DRAW_FILL.DRAW_EMPTY,
-    DOT_PIXEL.DOT_PIXEL_1
-)
-    
-LCD1IN8.DrawCircle(
-    20,
-    35,
-    8,
-    LCD1IN8.Get_Color(LCD_COLOR.GREEN),
-    DRAW_FILL.DRAW_FULL,
-    DOT_PIXEL.DOT_PIXEL_4
-)
-//LCD1IN8.LCD_DisplayWindows(10, 30, 60, 60)
-LCD1IN8.DisNumber(
-    50,
-    10,
-    32105,
-    LCD1IN8.Get_Color(LCD_COLOR.MAGENTA)
-)
-LCD1IN8.DisString(
-    0,
-    85,
-    "Welcome to Mcufriend ",
-    LCD1IN8.Get_Color(LCD_COLOR.BLUE)
-    )
+LCD1IN8.LCD_SetBL(10)
+LCD1IN8.LCD_Clear()
+LCD1IN8.LCD_Filling(LCD1IN8.Get_Color(LCD_COLOR.WHITE))
+LCD1IN8.LCD_ClearBuf()
+LCD1IN8.DrawPoint(80, 64, LCD1IN8.Get_Color(LCD_COLOR.RED), DOT_PIXEL.DOT_PIXEL_4)
+LCD1IN8.DrawLine(1, 1, 160, 128, LCD1IN8.Get_Color(LCD_COLOR.BLUE), DOT_PIXEL.DOT_PIXEL_1, LINE_STYLE.LINE_SOLID)
+LCD1IN8.DrawLine(1, 128, 160, 1, LCD1IN8.Get_Color(LCD_COLOR.GRAY), DOT_PIXEL.DOT_PIXEL_1, LINE_STYLE.LINE_DOTTED)
+LCD1IN8.DrawRectangle(10, 10, 70, 50, LCD1IN8.Get_Color(LCD_COLOR.GREEN), DRAW_FILL.DRAW_EMPTY, DOT_PIXEL.DOT_PIXEL_2)
+LCD1IN8.DrawCircle(110, 65, 24, LCD1IN8.rgb565(255, 180, 0), DRAW_FILL.DRAW_FULL, DOT_PIXEL.DOT_PIXEL_1)
+LCD1IN8.DisString(8, 92, "micro:bit V2", LCD1IN8.Get_Color(LCD_COLOR.MAGENTA))
+LCD1IN8.DisNumber(8, 108, 2026, LCD1IN8.Get_Color(LCD_COLOR.BLACK))
+LCD1IN8.LCD_Display()
+LCD1IN8.LCD_DisplayWindows(1, 1, 80, 64)

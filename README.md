@@ -1,110 +1,78 @@
-# LCD1in8
+# MFDLCD18_H MakeCode 扩展
 
-Used to test landscape display
+这是适用于 **BBC micro:bit V2** 的 1.8 英寸彩色 LCD MakeCode 图形化扩展。硬件为 Waveshare 兼容模块，分辨率 160×128，LCD 驱动芯片为 ST7735S，并使用板载 23LC1024 SRAM 作为绘图缓存。
 
-# Package product
+## 在 MakeCode 网页版中使用
 
-www.mcufriend.com
+1. 打开 [MakeCode for micro:bit](https://makecode.microbit.org/)，新建项目。
+2. 点击“扩展”，在搜索框粘贴：
 
-# test
-Test can refer to test.ts
+   ```text
+   https://github.com/susu3621/MFDLCD18_H
+   ```
 
-# user
-If you find a problem with the https://makecode.microbit.org/#
-programming website, you can't download it. 
-Try https://makecode.microbit.org/v0 to edit your project.
-For reference, please refer to our user manual.
+3. 选择扩展后，工具箱会出现“1.8in LCD”积木分类。
+4. 程序开头先使用“初始化 1.8in LCD”和“清空绘图缓存”积木。
+5. 绘图完成后使用“在 LCD 显示绘图缓存”积木刷新屏幕。
 
+坐标采用 1 起始：左上角为 `(1, 1)`，右下角为 `(160, 128)`。
 
-If you find that there are many places to change, 
-such as the function name changed you can find the answer here,
-Or contact us
+## 快速示例
 
-1.Initiation: 
-You need to initial LCD module first.
+```typescript
+LCD1IN8.LCD_Init()
+LCD1IN8.LCD_SetBL(10)
+LCD1IN8.LCD_ClearBuf()
+LCD1IN8.DrawRectangle(
+    10, 10, 150, 118,
+    LCD1IN8.Get_Color(LCD_COLOR.BLUE),
+    DRAW_FILL.DRAW_EMPTY,
+    DOT_PIXEL.DOT_PIXEL_2
+)
+LCD1IN8.DisString(20, 55, "micro:bit V2", LCD1IN8.Get_Color(LCD_COLOR.RED))
+LCD1IN8.LCD_Display()
+```
 
-block: LCD1IN8 Init.
-javascript: LCD_Init()
+## 积木功能
 
-2.Clear the screen:
-Clear the screen to white. Create an buffer on RAM with the resolution size 160*128 and initial it to white.
+- 初始化 LCD、调节 0–10 级背光。
+- 清屏、填充屏幕、清空 SRAM 绘图缓存、全屏或局部刷新。
+- 绘制点、实线/虚线、空心/实心矩形和圆。
+- 显示可打印 ASCII 文本与数字。
+- 使用预设 RGB565 颜色，或由 RGB 数值生成自定义 RGB565 颜色。
 
-block: Clear Clear screen and cache.
-javascript: LCD_Init()
+“清屏”和“填充屏幕”会直接修改当前 LCD 画面；点、线、图形及文字会先写入板载 SRAM，需要调用全屏或局部刷新才能显示。
 
-3.Set the backlight:
+## 固定引脚
 
-block: Set back light level.
-javascript: LCD_SetBL()
+| 功能 | micro:bit 引脚 |
+| --- | --- |
+| SPI MOSI | P15 |
+| SPI MISO | P14 |
+| SPI SCK | P13 |
+| LCD CS | P16 |
+| SRAM CS | P2 |
+| LCD DC | P12 |
+| LCD RST | P8 |
+| 背光 PWM | P1 |
 
-4.Send display data:
-With this block, it will send one frame of buffer to the LCD and display. 
-Note: it is always following drawing operation.
+## 本地验证
 
-block: Send display data.
-javascript: LCD_Display()
+安装 Node.js 后，在仓库目录执行：
 
-5.Send widows display data:
-Sometimes it is not necessary to refresh the entire screen data, 
-only need to display part of the window data.
+```bash
+npx pxt target microbit v9.1.1
+npx pxt build
+```
 
-block: Send widows display data.
-javascript: LCD_DisplayWindows()
+`test.ts` 会在扩展作为顶层项目编译时覆盖所有公开积木 API。生成的 Universal Hex 可用于 micro:bit V2。
 
-6.Clear screen and cache:
+## 兼容性说明
 
-block: Clear screen and cache.
-javascript: LCD_Clear()
+本版本将旧 mbed C++ 驱动迁移为 MakeCode TypeScript，以兼容 micro:bit V2 的 CODAL 运行时和当前 MakeCode 网页编辑器。保留了原项目的 `LCD1IN8` 命名空间、常用函数名和枚举名，已有 TypeScript 项目可以继续迁移使用。
 
-7.Fill the full screen color:
-block: Filling Color.
-javascript: LCD_Filling()
-
-8.Draw point:
-Place the block before send display data. 
-You can choose the position, color and size. 
-For the screen, (1,1) is on top-left, and (160,128) is on bottom-right
-There are tow way to set the color, 
-the one is use the color block as above, 
-another is to set the value (RGB565) by drag the slider.
-
-block: Draw Point.
-javascript: DrawPoint()
-
-9.Draw line:
-You can choose the the line's position, color, size and its sytle.
-
-block: Draw Line.
-javascript: DrawLine()
-
-10.Draw rectange:
-
-block: Draw Rectange.
-javascript: DrawRectangle()
-
-11.Draw Circle:
-
-block: Draw Circle.
-javascript: DrawCirclee()
-
-12.Show String:
-
-block: Show String.
-javascript: DisString()
-
-13.Show number:
-
-block: Show number.
-javascript: DisNumber()
-
-#More parameters can be found in test.ts for a detailed understanding.
+硬件初始化与引脚定义参考 Waveshare 的 micro:bit V2 驱动。字库支持 ASCII 字符 `32` 到 `126`；其他字符显示为问号。
 
 ## License
 
 MIT
-
-## Supported targets
-
-* for PXT/microbit
-(The metadata above is needed for package search.)
-

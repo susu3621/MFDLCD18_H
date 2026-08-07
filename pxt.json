@@ -1,25 +1,22 @@
 {
-    "name": "LCD1in8",
-    "version": "0.0.0",
-    "description": "Mcufriend",
+    "name": "mfdlcd18-h",
+    "version": "2.0.0",
+    "description": "MakeCode blocks for the Waveshare-compatible 1.8-inch 160x128 LCD on micro:bit V2",
+    "license": "MIT",
     "dependencies": {
-        "core": "*",
-        "radio": "*"
+        "core": "*"
     },
     "files": [
         "README.md",
         "LCD1in8.ts",
-        "LCD1in8.cpp",
-        "LCD_Driver.cpp",
-        "LCD_Driver.h",
-        "SPI_RAM.cpp",
-        "SPI_RAM.h",
-        "shims.d.ts",
-        "enums.d.ts"
+        "_locales/zh/LCD1in8-strings.json"
     ],
     "testFiles": [
         "test.ts"
     ],
-    "public": false,
-    "license": "MIT"
+    "public": true,
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "tsprj"
 }
